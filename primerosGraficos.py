@@ -7,7 +7,7 @@ from PyQt4.QtGui import *
 
 class VentanaGraficos(QMainWindow):
     """this class creates a main window to observe the grouth of a simulation"""
-    marca_frec
+    #marca_frec
    #constructor
     def __init__(self):
         super().__init__() #call super class constructor
@@ -17,15 +17,16 @@ class VentanaGraficos(QMainWindow):
 
     def actFiltroPA(self,frecu):
         global marca_frec
-        marca_frec.setData(frecu)
+        #marca_frec.setData(frecu)
 
     def create_layout(self):
         global marca_frec        
         self.widget = pg.PlotWidget(title="Some Plotting")
         self.widget2 = pg.PlotWidget(title="Some Plotting 2")
         self.widget.setWindowTitle("random Plotting")
+        y = np.linspace( 0, 4000, 100 )
         x = np.random.normal(loc=0.0,scale=2,size=100)
-        self.widget.plotItem.plot(x)
+        self.widget.plotItem.plot(y,x)
         x = np.random.normal(loc=0.0,scale=2,size=100)
         self.widget.plotItem.plot(np.random.normal(size=100), pen=(200,200,200), symbolBrush=(255,0,0), symbolPen='w')
         x = np.random.normal(loc=0.0,scale=2,size=100)
