@@ -14,6 +14,7 @@ class VentanaPrincipal(QMainWindow):
 
     def crear_layout(self):
         self.espectroTotal = widgetGrafico.ClaseGrafico("Espectro Total")
+        self.espectroTotal.actualizarGrafico(000, 1608)
         self.sectoresPantalla = QVBoxLayout()
         self.espacio = QWidget()
         self.sectoresPantalla.addWidget(self.espectroTotal)
