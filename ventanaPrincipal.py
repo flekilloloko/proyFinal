@@ -2,8 +2,8 @@ import sys
 import pyqtgraph as pg
 import numpy as np
 import widgetGrafico
-from PyQt5 import QtCore  # .QtCore import *
-from PyQt5.QtGui import *
+from PyQt4 import QtCore  # .QtCore import *
+from PyQt4.QtGui import *
 
 
 class VentanaPrincipal(QMainWindow):
@@ -21,16 +21,13 @@ class VentanaPrincipal(QMainWindow):
         self.espacio.setLayout(self.sectoresPantalla)
 
         self.setCentralWidget(self.espacio)
-
+"""
         def proximo_frame():
             global espectroTotal
             data = np.random.normal(loc=0.0, scale=2, size=1024)
-            self.espectroTotal.actualizar_grafico(000, 1608, data)
+            self.espectroTotal.actualizar_grafico(000, 1608, data)"""
 
         # proximo_frame()
-        timer = QtCore.QTimer()
-        timer.timeout.connect(proximo_frame)
-        timer.start(10)
 
 
 def main():
