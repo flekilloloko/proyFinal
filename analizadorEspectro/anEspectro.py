@@ -36,25 +36,33 @@ class AnalizadorDeEspectro(object):
 
     def initUI(self):
         self.app = QtGui.QApplication(sys.argv)
-        # self.app.quitOnLastWindowClosed()
+        self.app.quitOnLastWindowClosed()
 
         self.mainWindow = QtGui.QMainWindow()
         self.mainWindow.setWindowTitle("Spectrum Analyzer")
-        self.mainWindow.resize(800, 300)
+        self.mainWindow.resize(800, 800)
         self.centralWid = QtGui.QWidget()
         self.mainWindow.setCentralWidget(self.centralWid)
         self.lay = QtGui.QVBoxLayout()
         self.centralWid.setLayout(self.lay)
 
-        self.specWid = pg.PlotWidget(name="spectrum")
-        self.specItem = self.specWid.getPlotItem()
-        self.specItem.setMouseEnabled(y=False)
-        self.specItem.setYRange(0, 5)
-        self.specItem.setXRange(0, RANGE, padding=0)
+        self.espec1 = pg.PlotWidget(name="eTotal", title="Espectro Total")
+        self.especTotal = self.espec1.getPlotItem()
+        self.especTotal.setMouseEnabled(y=False)
+        self.especTotal.setYRange(0, 5)
+        self.especTotal.setXRange(0, RANGE, padding=0)
 
-        self.specAxis = self.specItem.getAxis("bottom")
-        self.specAxis.setLabel("Frequency [Hz]")
-        self.lay.addWidget(self.specWid)
+        self.espec2 = pg.PlotWidget(name="eIndiv", title="Espectro Individual")
+        self.especIndiv = self.espec2.getPlotItem()
+        self.especIndiv.setMouseEnabled(y=False)
+        self.especIndiv.setYRange(0, 5)
+        self.especIndiv.setXRange(0, RANGE, padding=0)
+
+        self.ejeX = self.especTotal.getAxis("bottom")
+        self.ejeX.setLabel("Frequencia [Hz]")
+
+        self.lay.addWidget(self.espec1)
+        self.lay.addWidget(self.espec2)
 
         self.mainWindow.show()
         self.app.aboutToQuit.connect(self.close)
@@ -74,7 +82,7 @@ class AnalizadorDeEspectro(object):
         x = np.linspace(0, 4000, 1024)
         data = np.random.normal(loc=0.0, scale=2, size=1024)
 
-        self.specItem.plot(x=x, y=data, clear=True)
+        self.especTotal.plot(x=x, y=data, clear=True)
 
 
 ads = AnalizadorDeEspectro()
