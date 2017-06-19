@@ -43,33 +43,104 @@ class AnalizadorDeEspectro(object):
         self.mainWindow.resize(800, 800)
         self.centralWid = QtGui.QWidget()
         self.mainWindow.setCentralWidget(self.centralWid)
-        self.lay = QtGui.QVBoxLayout()
-        self.centralWid.setLayout(self.lay)
+        # self.lay_h = QtGui.QHBoxLayout()
+        self.lay_v = QtGui.QVBoxLayout()
+        # self.lay_h.addLayout(self.lay_v)
+        self.centralWid.setLayout(self.lay_v)
 
         self.espec1 = pg.PlotWidget(name="eTotal", title="Espectro Total")
         self.especTotal = self.espec1.getPlotItem()
         self.especTotal.setMouseEnabled(y=False)
         self.especTotal.setYRange(0, 5)
         self.especTotal.setXRange(0, RANGE, padding=0)
+        self.lay_espec_t = QtGui.QVBoxLayout()
+        self.lay_espec_t.addWidget(self.espec1)
 
         self.espec2 = pg.PlotWidget(name="eIndiv", title="Espectro Individual")
         self.especIndiv = self.espec2.getPlotItem()
         self.especIndiv.setMouseEnabled(y=False)
         self.especIndiv.setYRange(0, 5)
         self.especIndiv.setXRange(0, RANGE, padding=0)
+        # self.lay_espec_i = QtGui.QVBoxLayout()
+        # self.lay_espec_i.addWidget(self.espec2)
 
         self.ejeX = self.especTotal.getAxis("bottom")
         self.ejeX.setLabel("Frequencia [Hz]")
 
-        self.lay.addWidget(self.espec1)
-        self.lay.addWidget(self.espec2)
+        self.botonera_layout = QtGui.QHBoxLayout()
+        self.reset_zoom_btn = QtGui.QPushButton("Resetear Zooms")
+        self.param_btn = QtGui.QPushButton("Setear Parametros")
+        self.fil_btn = QtGui.QPushButton("Frecuencias Filtros")
+        self.botonera_layout.addWidget(self.reset_zoom_btn)
+        self.botonera_layout.addWidget(self.param_btn)
+        self.botonera_layout.addWidget(self.fil_btn)
+
+        self.lay_v.addLayout(self.lay_espec_t)
+        self.lay_v.addWidget(self.espec2)
+        self.lay_v.addLayout(self.botonera_layout)
 
         self.mainWindow.show()
         self.app.aboutToQuit.connect(self.close)
 
+        self.graf_componentes_t = self.especTotal.plot()
+        self.graf_lineaPb = self.especTotal.addLine(x=4000)
+        self.graf_lineaPa = self.especTotal.addLine(x=0)
+
+        self.sliderFpb = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.sliderFpa = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.label_Fpb = QtGui.QLabel("4000")
+        self.label_nombreFpb = QtGui.QLabel("F. Pasa Bajos [Hz]")
+        self.label_Fpb.setFixedWidth(60)
+        self.label_Fpa = QtGui.QLabel("0")
+        self.label_nombreFpa = QtGui.QLabel("F. Pasa Altos  [Hz]")
+        self.label_Fpa.setFixedWidth(60)
+        self.lay_sliderFpb = QtGui.QHBoxLayout()
+        self.lay_sliderFpa = QtGui.QHBoxLayout()
+        self.lay_sliderFpb.addWidget(self.label_nombreFpb)
+        self.lay_sliderFpb.addWidget(self.sliderFpb)
+        self.lay_sliderFpb.addWidget(self.label_Fpb)
+        self.lay_sliderFpa.addWidget(self.label_nombreFpa)
+        self.lay_sliderFpa.addWidget(self.sliderFpa)
+        self.lay_sliderFpa.addWidget(self.label_Fpa)
+        self.lay_espec_t.addLayout(self.lay_sliderFpa)
+        self.lay_espec_t.addLayout(self.lay_sliderFpb)
+        self.sliderFpa.hide()
+        self.sliderFpb.hide()
+        self.label_Fpa.hide()
+        self.label_Fpb.hide()
+        self.label_nombreFpa.hide()
+        self.label_nombreFpb.hide()
+
+        self.fil_btn.clicked.connect(self.mostrar_sliders)
+        self.sliderFpa.valueChanged.connect(self.actualizar_graf_fil)
+
+    def actualizar_graf_fil(self):
+        self.graf_lineaPb = self.especTotal.addLine(
+                                            x=self.sliderFpb.tickPosition)
+        self.graf_lineaPa = self.especTotal.addLine(
+                                            x=self.sliderFpa.tickPosition)
+        self.label_Fpa = self.sliderFpa.tickPosition
+        self.label_Fpb = self.sliderFpb.tickPosition
+
     def close(self):
         # self.stream.close()
         sys.exit()
+
+    def mostrar_sliders(self):
+        if self.sliderFpa.isVisible():
+            self.sliderFpa.hide()
+            self.sliderFpb.hide()
+            self.label_Fpa.hide()
+            self.label_Fpb.hide()
+            self.label_nombreFpa.hide()
+            self.label_nombreFpb.hide()
+        else:
+            self.sliderFpa.show()
+            self.sliderFpb.show()
+            self.label_Fpa.show()
+            self.label_Fpb.show()
+            self.label_nombreFpa.show()
+            self.label_nombreFpb.show()
 
     def mainLoop(self):
         # Sometimes Input overflowed because of mouse events, ignore this
@@ -82,7 +153,7 @@ class AnalizadorDeEspectro(object):
         x = np.linspace(0, 4000, 1024)
         data = np.random.normal(loc=0.0, scale=2, size=1024)
 
-        self.especTotal.plot(x=x, y=data, clear=True)
+        self.graf_componentes_t.setData(x, data)
 
 
 ads = AnalizadorDeEspectro()
