@@ -4,6 +4,7 @@
 import struct
 import math
 import sys
+from mi_slider_class import *
 import numpy as np
 # import IPython as ipy
 
@@ -40,7 +41,7 @@ class AnalizadorDeEspectro(object):
 
         self.mainWindow = QtGui.QMainWindow()
         self.mainWindow.setWindowTitle("Spectrum Analyzer")
-        self.mainWindow.resize(800, 800)
+        self.mainWindow.resize(1000, 1000)
         self.centralWid = QtGui.QWidget()
         self.mainWindow.setCentralWidget(self.centralWid)
         # self.lay_h = QtGui.QHBoxLayout()
@@ -83,40 +84,28 @@ class AnalizadorDeEspectro(object):
         self.app.aboutToQuit.connect(self.close)
 
         self.graf_componentes_t = self.especTotal.plot()
-        self.graf_lineaPb = self.especTotal.addLine(x=4000)
-        self.graf_lineaPa = self.especTotal.addLine(x=0)
+        self.graf_lineaPa = pg.InfiniteLine(movable=True, angle=90, pos=0)
+        self.graf_lineaPb = pg.InfiniteLine(movable=True, angle=90, pos=4000)
+        self.especTotal.addItem(self.graf_lineaPa)
+        self.especTotal.addItem(self.graf_lineaPb)
 
-        self.sliderFpb = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.sliderFpa = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.label_Fpb = QtGui.QLabel("4000")
-        self.label_nombreFpb = QtGui.QLabel("F. Pasa Bajos [Hz]")
-        self.label_Fpb.setFixedWidth(60)
-        self.label_Fpa = QtGui.QLabel("0")
-        self.label_nombreFpa = QtGui.QLabel("F. Pasa Altos  [Hz]")
-        self.label_Fpa.setFixedWidth(60)
-        self.lay_sliderFpb = QtGui.QHBoxLayout()
-        self.lay_sliderFpa = QtGui.QHBoxLayout()
-        self.lay_sliderFpb.addWidget(self.label_nombreFpb)
-        self.lay_sliderFpb.addWidget(self.sliderFpb)
-        self.lay_sliderFpb.addWidget(self.label_Fpb)
-        self.lay_sliderFpa.addWidget(self.label_nombreFpa)
-        self.lay_sliderFpa.addWidget(self.sliderFpa)
-        self.lay_sliderFpa.addWidget(self.label_Fpa)
-        self.lay_espec_t.addLayout(self.lay_sliderFpa)
-        self.lay_espec_t.addLayout(self.lay_sliderFpb)
-        self.sliderFpa.hide()
-        self.sliderFpb.hide()
-        self.label_Fpa.hide()
-        self.label_Fpb.hide()
-        self.label_nombreFpa.hide()
-        self.label_nombreFpb.hide()
+        # self.graf_lineaPb = self.especTotal.addLine(x=4000)
+        # self.graf_lineaPa = self.especTotal.addLine(x=0)
 
-        self.fil_btn.clicked.connect(self.mostrar_sliders)
-        self.sliderFpa.valueChanged.connect(self.actualizar_graf_fil)
+        self.ctrolFrec = Mi_Slider()
+        self.lay_espec_t.addWidget(self.ctrolFrec)
+
+        self.fil_btn.clicked.connect(self.ctrolFrec.visualizacion)
+        # self.connect(self.ctrolFrec, QtCore.SIGNAL("frec_cambio()"),
+                        # self.actualizar_graf_fil)
+        self.ctrolFrec.sliderFpb.valueChanged.connect(self.filtrosActSli)
+        self.ctrolFrec.sliderFpa.valueChanged.connect(self.filtrosActSli)
+        self.graf_lineaPa.sigPositionChanged.connect(self.filtrosActLin)
+        self.graf_lineaPb.sigPositionChanged.connect(self.filtrosActLin)
 
     def actualizar_graf_fil(self):
         self.graf_lineaPb = self.especTotal.addLine(
-                                            x=self.sliderFpb.tickPosition)
+                                            x=self.ctrolFrec.sliderFpa.value())
         self.graf_lineaPa = self.especTotal.addLine(
                                             x=self.sliderFpa.tickPosition)
         self.label_Fpa = self.sliderFpa.tickPosition
@@ -134,6 +123,8 @@ class AnalizadorDeEspectro(object):
             self.label_Fpb.hide()
             self.label_nombreFpa.hide()
             self.label_nombreFpb.hide()
+
+            # timerF.stop()
         else:
             self.sliderFpa.show()
             self.sliderFpb.show()
@@ -141,6 +132,20 @@ class AnalizadorDeEspectro(object):
             self.label_Fpb.show()
             self.label_nombreFpa.show()
             self.label_nombreFpb.show()
+
+            # timerF.start(100)
+
+    def filtrosActLin(self):
+        self.ctrolFrec.sliderFpa.setValue(self.graf_lineaPa.value())
+        self.ctrolFrec.sliderFpb.setValue(self.graf_lineaPb.value())
+
+    def filtrosActSli(self):
+        self.Fpa = self.ctrolFrec.sliderFpa.value()
+        self.Fpb = self.ctrolFrec.sliderFpb.value()
+        self.graf_lineaPb.setValue(self.Fpb)
+        self.graf_lineaPa.setValue(self.Fpa)
+        self.ctrolFrec.label_Fpb.setText(str(self.Fpb))
+        self.ctrolFrec.label_Fpa.setText(str(self.Fpa))
 
     def mainLoop(self):
         # Sometimes Input overflowed because of mouse events, ignore this
@@ -164,6 +169,9 @@ if __name__ == '__main__':
     timer = QtCore.QTimer()
     timer.timeout.connect(ads.mainLoop)
     timer.start(10)
+
+    # timerF = QtCore.QTimer()
+    # timerF.timeout.connect(ads.filtrosAct)
     QtGui.QApplication.instance().exec_()
 
 """
