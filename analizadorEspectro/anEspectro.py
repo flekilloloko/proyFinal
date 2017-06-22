@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# import pyaudio
+import pyaudio
 import struct
 import math
 import sys
@@ -12,12 +12,12 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
 # Audio Format (check Audio MIDI Setup if on Mac)
-# FORMAT = pyaudio.paInt16
+FORMAT = pyaudio.paInt16
 RATE = 44100
 CHANNELS = 2
 
 # Set Plot Range [-RANGE,RANGE], default is nyquist/2
-RANGE = 4000  # None
+RANGE = 8000  # None
 if not RANGE:
     RANGE = RATE / 2
 
@@ -31,9 +31,43 @@ LR = "l"
 
 class AnalizadorDeEspectro(object):
     def __init__(self):
-        # self.pa = pyaudio.PyAudio()
-        # self.initMicrophone()
+        self.pa = pyaudio.PyAudio()
+        self.initMicrophone()
         self.initUI()
+
+    def find_input_device(self):
+        device_index = None
+        for i in range(self.pa.get_device_count()):
+            devinfo = self.pa.get_device_info_by_index(i)
+            if devinfo["name"].lower() in ["mic", "input"]:
+                device_index = i
+
+        return device_index
+
+    def initMicrophone(self):
+        device_index = self.find_input_device()
+
+        self.stream = self.pa.open(format=FORMAT,
+                                    channels=CHANNELS,
+                                    rate=RATE,
+                                    input=True,
+                                    input_device_index=device_index,
+                                    frames_per_buffer=INPUT_FRAMES_PER_BLOCK)
+
+    def readData(self):
+        block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
+        count = len(block) / 2
+        formato = "%dh" % (count)
+        shorts = struct.unpack(formato, block)
+        if CHANNELS == 1:
+            return np.array(shorts)
+        else:
+            l = shorts[::2]
+            r = shorts[1::2]
+            if LR == 'l':
+                return np.array(l)
+            else:
+                return np.array(r)
 
     def initUI(self):
         self.app = QtGui.QApplication(sys.argv)
@@ -52,7 +86,7 @@ class AnalizadorDeEspectro(object):
         self.espec1 = pg.PlotWidget(name="eTotal", title="Espectro Total")
         self.especTotal = self.espec1.getPlotItem()
         self.especTotal.setMouseEnabled(y=False)
-        self.especTotal.setYRange(0, 5)
+        self.especTotal.setYRange(0, 100)
         self.especTotal.setXRange(0, RANGE, padding=0)
         self.lay_espec_t = QtGui.QVBoxLayout()
         self.lay_espec_t.addWidget(self.espec1)
@@ -60,7 +94,7 @@ class AnalizadorDeEspectro(object):
         self.espec2 = pg.PlotWidget(name="eIndiv", title="Espectro Individual")
         self.especIndiv = self.espec2.getPlotItem()
         self.especIndiv.setMouseEnabled(y=False)
-        self.especIndiv.setYRange(0, 5)
+        self.especIndiv.setYRange(0, 1000)
         self.especIndiv.setXRange(0, RANGE, padding=0)
         # self.lay_espec_i = QtGui.QVBoxLayout()
         # self.lay_espec_i.addWidget(self.espec2)
@@ -112,8 +146,18 @@ class AnalizadorDeEspectro(object):
         self.label_Fpb = self.sliderFpb.tickPosition
 
     def close(self):
-        # self.stream.close()
+        self.stream.close()
         sys.exit()
+
+    def get_spectrum(self, data):
+        T = 1.0/RATE
+        N = data.shape[0]
+        Pxx = (1./N)*np.fft.fft(data)
+        f = np.fft.fftfreq(N,T)
+        Pxx = np.fft.fftshift(Pxx)
+        f = np.fft.fftshift(f)
+
+        return f.tolist(), (np.absolute(Pxx)).tolist()
 
     def mostrar_sliders(self):
         if self.sliderFpa.isVisible():
@@ -150,15 +194,14 @@ class AnalizadorDeEspectro(object):
     def mainLoop(self):
         # Sometimes Input overflowed because of mouse events, ignore this
         try:
-            # data = self.readData()
-            pass
+            data = self.readData()
         except IOError:
             pass
-        # f, Pxx = self.get_spectrum(data)
-        x = np.linspace(0, 4000, 1024)
+        f, Pxx = self.get_spectrum(data)
+        # x = np.linspace(0, 4000, 1024)
         data = np.random.normal(loc=0.0, scale=2, size=1024)
 
-        self.graf_componentes_t.setData(x, data)
+        self.graf_componentes_t.setData(f, Pxx)
 
 
 ads = AnalizadorDeEspectro()
