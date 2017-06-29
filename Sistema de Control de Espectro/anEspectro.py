@@ -32,8 +32,8 @@ LR = "l"
 class AnalizadorDeEspectro(object):
     def __init__(self):
         self.pa = pyaudio.PyAudio()
-        self.initMicrophone()
         self.initUI()
+        self.initMicrophone()
 
     def find_input_device(self):
         device_index = None
@@ -46,7 +46,7 @@ class AnalizadorDeEspectro(object):
 
     def initMicrophone(self):
         device_index = self.find_input_device()
-
+        # self.ctrolFrec.label_Fpb.setText(str(device_index))
         self.stream = self.pa.open(format=FORMAT,
                                     channels=CHANNELS,
                                     rate=RATE,
@@ -86,7 +86,7 @@ class AnalizadorDeEspectro(object):
         self.espec1 = pg.PlotWidget(name="eTotal", title="Espectro Total")
         self.especTotal = self.espec1.getPlotItem()
         self.especTotal.setMouseEnabled(y=False)
-        self.especTotal.setYRange(0, 100)
+        self.especTotal.setYRange(0, 600)
         self.especTotal.setXRange(0, RANGE, padding=0)
         self.lay_espec_t = QtGui.QVBoxLayout()
         self.lay_espec_t.addWidget(self.espec1)
@@ -150,10 +150,10 @@ class AnalizadorDeEspectro(object):
         sys.exit()
 
     def get_spectrum(self, data):
-        T = 1.0/RATE
+        T = 1.0 / RATE
         N = data.shape[0]
-        Pxx = (1./N)*np.fft.fft(data)
-        f = np.fft.fftfreq(N,T)
+        Pxx = (1. / N) * np.fft.fft(data)
+        f = np.fft.fftfreq(N, T)
         Pxx = np.fft.fftshift(Pxx)
         f = np.fft.fftshift(f)
 
