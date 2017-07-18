@@ -2,10 +2,11 @@
 
 import pyaudio
 import struct
-import math
+# import math
 import sys
 from mi_slider_class import *
 import numpy as np
+import threading
 # import IPython as ipy
 
 import pyqtgraph as pg
@@ -27,6 +28,9 @@ INPUT_FRAMES_PER_BLOCK = int(RATE * INPUT_BLOCK_TIME)
 
 # Which Channel? (L or R)
 LR = "l"
+
+class graficadorEspectro(threading.Thread):
+    def run(self):
 
 
 class AnalizadorDeEspectro(object):
