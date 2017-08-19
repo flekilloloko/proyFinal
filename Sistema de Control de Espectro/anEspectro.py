@@ -29,11 +29,12 @@ INPUT_FRAMES_PER_BLOCK = int(RATE * INPUT_BLOCK_TIME)
 # Which Channel? (L or R)
 LR = "l"
 
-class graficadorEspectro(threading.Thread):
-    def run(self):
+# class graficadorEspectro(threading.Thread):
+#     def run(self):
 
 
 class AnalizadorDeEspectro(object):
+
     def __init__(self):
         self.pa = pyaudio.PyAudio()
         self.initUI()
